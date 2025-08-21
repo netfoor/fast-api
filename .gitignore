@@ -70,3 +70,5 @@ docs/site/
 .env.development.local
 .env.test.local
 .env.production.local
+
+product.csv
