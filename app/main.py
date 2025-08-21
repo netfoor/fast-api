@@ -1,24 +1,32 @@
 from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
 from random import randrange
+import os 
+import time
+from supabase import create_client, Client
+import dotenv
+
+dotenv.load_dotenv()
 
 class Post(BaseModel):
     title: str
     content: str
-    id: int | None = None
     published: bool = True
-    rating: int | None = None
 
 app = FastAPI()
 
+while True: 
+    try:
+        url: str = os.environ.get("SUPABASE_URL")
+        key: str = os.environ.get("SUPABASE_KEY")
+        supabase: Client = create_client(url, key)
+        print("Supabase client created successfully")
+        break
+    except Exception as e:
+        print(f"Error connecting to Supabase: {e}")
+        time.sleep(4)
 
-# Save data in memory
-posts = [
-    {"title": "My first post", "content": "This is my first post", "id": 1},
-    {"title": "My second post", "content": "This is my second post", "id": 2},
-    {"title": "My third post", "content": "This is my third post", "id": 3}
-         
-]
+
 
 
 @app.get("/")
@@ -27,7 +35,13 @@ async def read_root():
 
 @app.get("/posts")
 def get_posts():
-    return {"posts": posts}
+    response = (
+    supabase.table("Posts")
+    .select("*")
+    .limit(10)
+    .execute()
+)
+    return {"posts": response.data}
 
 
 
@@ -35,33 +49,48 @@ def get_posts():
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
     posts_dic = post.model_dump()
-    posts_dic["id"] = randrange(0, 1000000)
-    posts.append(posts_dic)
-    return {"message": "Post created successfully", "post": posts_dic}
+    response = (
+        supabase.table("Posts")
+        .insert(posts_dic)
+        .execute()
+    )
+    return {"message": "Post created successfully", "post": response.data}
 
 
 @app.get("/posts/{id}")
 def get_post(id: int):
-    post = next((post for post in posts if post["id"] == id), None)
+    response = (
+        supabase.table("Posts")
+        .select("*")
+        .eq("id", id)
+        .execute()
+    )
+    post = response.data
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     return {"post": post}
 
 @app.delete("/posts/{id}")
 def delete_post(id: int):
-    post = next((post for post in posts if post["id"] == id), None)
-    if not post:
+    response = (
+        supabase.table("Posts")
+        .delete()
+        .eq("id", id)
+        .execute()
+    )
+    if not response.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-    posts.pop(posts.index(post))
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put("/posts/{id}")
 def update_post(id: int, post: Post):
     post_dict = post.model_dump()
-    existing_post = next((post for post in posts if post["id"] == id), None)
-    if not existing_post:
+    response = (
+        supabase.table("Posts")
+        .update(post_dict)
+        .eq("id", id)
+        .execute()
+    )
+    if not response.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-    posts.pop(posts.index(existing_post))
-    post_dict["id"] = randrange(0, 1000000)
-    posts.append(post_dict)
     return Response(status_code=status.HTTP_205_RESET_CONTENT)
