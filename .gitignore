@@ -72,3 +72,4 @@ docs/site/
 .env.production.local
 
 product.csv
+learn/

@@ -1,19 +1,35 @@
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException, Query
 from pydantic import BaseModel
 from random import randrange
+from .database import create_db_and_tables, SessionDependency
 import os 
 import time
 from supabase import create_client, Client
 import dotenv
+from contextlib import asynccontextmanager
+from typing import Annotated, Optional
+from sqlmodel import select, Session
+from datetime import datetime, timezone
+from .models import Post
 
 dotenv.load_dotenv()
 
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        create_db_and_tables()
+        print("🛠️ Database and tables created successfully")
+    except Exception as e:
+        print(f"Error creating database and tables: {e}")
+    yield
+
+    print("🛠️ Application shutting down...")
+
+
+
+    
+app = FastAPI(lifespan=lifespan)
 
 while True: 
     try:
@@ -33,64 +49,66 @@ while True:
 async def read_root():
     return {"message": "Welcome to my API"}
 
+
 @app.get("/posts")
-def get_posts():
-    response = (
-    supabase.table("Posts")
-    .select("*")
-    .limit(10)
-    .execute()
-)
-    return {"posts": response.data}
+def get_posts(
+    session: SessionDependency,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+    ) -> dict:
+    posts = session.exec(select(Post).offset(offset).limit(limit)).all()
+    return {"posts": posts}
 
 
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
-    posts_dic = post.model_dump()
-    response = (
-        supabase.table("Posts")
-        .insert(posts_dic)
-        .execute()
-    )
-    return {"message": "Post created successfully", "post": response.data}
+def create_post(
+    session: SessionDependency,
+    post: Post
+    ) -> dict:
+    session.add(post)
+    session.commit()
+    session.refresh(post)
+    return {"message": "Post created successfully", "post": post}
 
 
 @app.get("/posts/{id}")
-def get_post(id: int):
-    response = (
-        supabase.table("Posts")
-        .select("*")
-        .eq("id", id)
-        .execute()
-    )
-    post = response.data
+def get_post(
+    session: SessionDependency,
+    id: int
+    ) -> dict:
+    post = session.get(Post, id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     return {"post": post}
 
 @app.delete("/posts/{id}")
-def delete_post(id: int):
-    response = (
-        supabase.table("Posts")
-        .delete()
-        .eq("id", id)
-        .execute()
-    )
-    if not response.data:
+def delete_post(
+    session: SessionDependency,
+    id: int
+    ) -> dict:
+    post = session.get(Post, id)
+    if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    session.delete(post)
+    session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    post_dict = post.model_dump()
-    response = (
-        supabase.table("Posts")
-        .update(post_dict)
-        .eq("id", id)
-        .execute()
-    )
-    if not response.data:
+def update_post(
+    session: SessionDependency,
+    id: int,
+    post: Post
+    ):
+    existing_post = session.get(Post, id)
+    if not existing_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-    return Response(status_code=status.HTTP_205_RESET_CONTENT)
+    dic_post = post.model_dump(exclude_unset=True)
+    existing_post.sqlmodel_update(dic_post)
+    session.add(existing_post)
+    session.commit()
+    session.refresh(existing_post)
+    
+    return {"message": "Post updated successfully", "post": existing_post}
