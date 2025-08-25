@@ -10,9 +10,13 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Optional
 from sqlmodel import select, Session
 from datetime import datetime, timezone
-from .models import Post
-from . import schemas
+from .models import Post, User
+from . import schemas, utils
 from .schemas import PostCreate, PostUpdate
+
+
+
+
 
 dotenv.load_dotenv()
 
@@ -113,3 +117,73 @@ def update_post(
     session.refresh(existing_post)
     
     return existing_post
+
+
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
+def create_user(
+    session: SessionDependency,
+    user: schemas.UserCreate
+    ) -> dict:
+
+    user.password = utils.hash(user.password)
+
+    db_user = User(**user.model_dump())
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
+    return db_user
+
+
+@app.get("/users/{id}", response_model=schemas.UserResponse)
+def get_user(
+    session: SessionDependency,
+    id: int
+    ) -> dict:
+    user = session.get(User, id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+
+@app.get("/users", response_model=list[schemas.UserResponse])
+def get_users(
+    session: SessionDependency,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100
+    ) -> list[schemas.UserResponse]:
+    users = session.exec(select(User).offset(offset).limit(limit)).all()
+    return users
+
+
+@app.delete("/users/{id}", response_model=schemas.UserResponse)
+def delete_user(
+    session: SessionDependency,
+    id: int
+    ) -> dict:
+    user = session.get(User, id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    session.delete(user)
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.put("/users/{id}", response_model=schemas.UserResponse)
+def update_user(
+    session: SessionDependency,
+    id: int,
+    user: schemas.UserUpdate
+    ):
+
+    user.password = utils.hash(user.password)
+
+    existing_user = session.get(User, id)
+    if not existing_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    dic_user = user.model_dump(exclude_unset=True)
+    existing_user.sqlmodel_update(dic_user)
+    session.add(existing_user)
+    session.commit()
+    session.refresh(existing_user)
+
+    return existing_user

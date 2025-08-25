@@ -18,3 +18,14 @@ class Post(SQLModel, table=True):
         default=datetime.now(timezone.utc), 
         sa_column_kwargs={"server_default": text("now()")}
     )
+
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+    id: int = Field(primary_key=True, nullable=False)
+    email: str = Field(nullable=False, unique=True)
+    password: str = Field(nullable=False)
+    created_at: datetime | None = Field(
+        nullable=False,
+        default=datetime.now(timezone.utc),
+        sa_column_kwargs={"server_default": text("now()")}
+    )
