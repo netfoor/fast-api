@@ -11,6 +11,8 @@ from typing import Annotated, Optional
 from sqlmodel import select, Session
 from datetime import datetime, timezone
 from .models import Post
+from . import schemas
+from .schemas import PostCreate, PostUpdate
 
 dotenv.load_dotenv()
 
@@ -54,26 +56,25 @@ async def read_root():
 def get_posts(
     session: SessionDependency,
     offset: int = 0,
-    limit: Annotated[int, Query(le=100)] = 100,
-    ) -> dict:
+    limit: Annotated[int, Query(le=100)] = 100
+    ) -> list[schemas.PostResponse]:
     posts = session.exec(select(Post).offset(offset).limit(limit)).all()
-    return {"posts": posts}
+    return posts
 
 
-
-
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_post(
     session: SessionDependency,
-    post: Post
+    post: schemas.PostCreate
     ) -> dict:
-    session.add(post)
+    db_post = Post(**post.model_dump())
+    session.add(db_post)
     session.commit()
-    session.refresh(post)
-    return {"message": "Post created successfully", "post": post}
+    session.refresh(db_post)
+    return db_post
 
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model=schemas.PostResponse)
 def get_post(
     session: SessionDependency,
     id: int
@@ -81,9 +82,9 @@ def get_post(
     post = session.get(Post, id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-    return {"post": post}
+    return post
 
-@app.delete("/posts/{id}")
+@app.delete("/posts/{id}", response_model=schemas.PostResponse)
 def delete_post(
     session: SessionDependency,
     id: int
@@ -96,11 +97,11 @@ def delete_post(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put("/posts/{id}")
+@app.put("/posts/{id}", response_model=schemas.PostResponse)
 def update_post(
     session: SessionDependency,
     id: int,
-    post: Post
+    post: schemas.PostUpdate
     ):
     existing_post = session.get(Post, id)
     if not existing_post:
@@ -111,4 +112,4 @@ def update_post(
     session.commit()
     session.refresh(existing_post)
     
-    return {"message": "Post updated successfully", "post": existing_post}
+    return existing_post

@@ -73,3 +73,5 @@ docs/site/
 
 product.csv
 learn/
+
+*.csv
