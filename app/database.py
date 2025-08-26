@@ -3,7 +3,6 @@ import os
 from typing import Annotated
 from sqlmodel import Session, SQLModel, create_engine
 from fastapi import Depends
-from .models import Post
 
 dotenv.load_dotenv()
 
