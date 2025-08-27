@@ -6,7 +6,8 @@ from sqlmodel import select
 from ..models import Post
 
 router = APIRouter(
-    prefix="/posts"
+    prefix="/posts",
+    tags=["Posts"]
 )
 
 @router.get("/")
