@@ -1,6 +1,6 @@
 from fastapi import Response, status, HTTPException, Query, APIRouter
 from ..database import SessionDependency
-from .. import schemas
+from .. import schemas, oauth2
 from typing import Annotated
 from sqlmodel import select
 from ..models import Post
@@ -13,6 +13,7 @@ router = APIRouter(
 @router.get("/")
 def get_posts(
     session: SessionDependency,
+    current_user: oauth2.OauthDependency,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100
     ) -> list[schemas.PostResponse]:
@@ -23,7 +24,8 @@ def get_posts(
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_post(
     session: SessionDependency,
-    post: schemas.PostCreate
+    post: schemas.PostCreate,
+    current_user: oauth2.OauthDependency
     ) -> dict:
     db_post = Post(**post.model_dump())
     session.add(db_post)
@@ -35,6 +37,7 @@ def create_post(
 @router.get("/{id}", response_model=schemas.PostResponse)
 def get_post(
     session: SessionDependency,
+    current_user: oauth2.OauthDependency,
     id: int
     ) -> dict:
     post = session.get(Post, id)
@@ -45,6 +48,7 @@ def get_post(
 @router.delete("/{id}", response_model=schemas.PostResponse)
 def delete_post(
     session: SessionDependency,
+    current_user: oauth2.OauthDependency,
     id: int
     ) -> dict:
     post = session.get(Post, id)
@@ -58,6 +62,7 @@ def delete_post(
 @router.put("/{id}", response_model=schemas.PostResponse)
 def update_post(
     session: SessionDependency,
+    current_user: oauth2.OauthDependency,
     id: int,
     post: schemas.PostUpdate
     ):

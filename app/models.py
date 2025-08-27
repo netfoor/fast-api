@@ -6,6 +6,7 @@ from sqlalchemy import text
 class Post(SQLModel, table=True):
     __tablename__ = "posts"
     id: int = Field(primary_key=True, nullable=False)
+    user_id: int = Field(foreign_key="users.id", nullable=False, ondelete="CASCADE")
     title: str = Field(max_length=100, nullable=False)
     content: str = Field(nullable=False)
     published: bool | None = Field(

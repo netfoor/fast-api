@@ -41,5 +41,10 @@ class UserResponse(UserBase):
 
 
 
-class UserLogin(UserBase):
-    password: str
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    id: int
