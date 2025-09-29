@@ -17,7 +17,7 @@ def get_posts(
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100
     ) -> list[schemas.PostResponse]:
-    posts = session.exec(select(Post).offset(offset).limit(limit)).all()
+    posts = session.exec(select(Post).where(Post.user_id == current_user.id).offset(offset).limit(limit)).all()
     return posts
 
 
@@ -27,7 +27,7 @@ def create_post(
     post: schemas.PostCreate,
     current_user: oauth2.OauthDependency
     ) -> dict:
-    db_post = Post(**post.model_dump())
+    db_post = Post(user_id=current_user.id, **post.model_dump())
     session.add(db_post)
     session.commit()
     session.refresh(db_post)
@@ -40,9 +40,12 @@ def get_post(
     current_user: oauth2.OauthDependency,
     id: int
     ) -> dict:
-    post = session.get(Post, id)
+    post = session.exec(select(Post).where(Post.id == id)).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
     return post
 
 @router.delete("/{id}", response_model=schemas.PostResponse)
@@ -54,6 +57,10 @@ def delete_post(
     post = session.get(Post, id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
+
     session.delete(post)
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -69,6 +76,10 @@ def update_post(
     existing_post = session.get(Post, id)
     if not existing_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    if existing_post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
+
     dic_post = post.model_dump(exclude_unset=True)
     existing_post.sqlmodel_update(dic_post)
     session.add(existing_post)
