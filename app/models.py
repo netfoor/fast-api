@@ -1,6 +1,19 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime, timezone
 from sqlalchemy import text
+from typing import Optional
+
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+    id: int = Field(primary_key=True, nullable=False)
+    email: str = Field(nullable=False, unique=True)
+    password: str = Field(nullable=False)
+    posts: list["Post"] = Relationship(back_populates="owner")
+    created_at: datetime | None = Field(
+        nullable=False,
+        default=datetime.now(timezone.utc),
+        sa_column_kwargs={"server_default": text("now()")}
+    )
 
 
 class Post(SQLModel, table=True):
@@ -19,14 +32,5 @@ class Post(SQLModel, table=True):
         default=datetime.now(timezone.utc), 
         sa_column_kwargs={"server_default": text("now()")}
     )
+    owner: Optional["User"] = Relationship(back_populates="posts")
 
-class User(SQLModel, table=True):
-    __tablename__ = "users"
-    id: int = Field(primary_key=True, nullable=False)
-    email: str = Field(nullable=False, unique=True)
-    password: str = Field(nullable=False)
-    created_at: datetime | None = Field(
-        nullable=False,
-        default=datetime.now(timezone.utc),
-        sa_column_kwargs={"server_default": text("now()")}
-    )
