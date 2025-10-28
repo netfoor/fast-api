@@ -1,7 +1,7 @@
 from fastapi import Response, status, HTTPException, Query, APIRouter
 from ..database import SessionDependency
 from .. import schemas, oauth2
-from typing import Annotated
+from typing import Annotated, Optional
 from sqlmodel import select
 from ..models import Post
 
@@ -15,9 +15,13 @@ def get_posts(
     session: SessionDependency,
     current_user: oauth2.OauthDependency,
     offset: int = 0,
-    limit: Annotated[int, Query(le=100)] = 100
+    limit: Annotated[int, Query(le=100)] = 100,
+    search: Optional[str] = ""
     ) -> list[schemas.PostResponse]:
-    posts = session.exec(select(Post).where(Post.user_id == current_user.id).offset(offset).limit(limit)).all()
+    query = select(Post).where(Post.user_id == current_user.id)
+    if search:
+        query = query.where(Post.title.contains(search))
+    posts = session.exec(query.offset(offset).limit(limit)).all()
     return posts
 
 
