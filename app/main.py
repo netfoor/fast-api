@@ -1,12 +1,7 @@
 from fastapi import FastAPI
 from .database import create_db_and_tables
-import dotenv
 from contextlib import asynccontextmanager
 from .routes import post, user, auth
-
-
-dotenv.load_dotenv()
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,8 +15,6 @@ async def lifespan(app: FastAPI):
     print("🛠️ Application shutting down...")
 
 
-
-    
 app = FastAPI(lifespan=lifespan)
 
 

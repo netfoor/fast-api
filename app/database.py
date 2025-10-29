@@ -1,15 +1,15 @@
-import dotenv
 import os
 from typing import Annotated
 from sqlmodel import Session, SQLModel, create_engine
 from fastapi import Depends
+from .config import settings
 
-dotenv.load_dotenv()
+
 
 
 # Postgres Engine
 
-postgresql_url = os.environ.get("POSTGRESQL_URL")
+postgresql_url = settings.POSTGRESQL_URL
 engine = create_engine(postgresql_url)
 
 # Create the database and tables
