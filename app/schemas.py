@@ -48,3 +48,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: int
+
+
+class Vote(BaseModel):
+    post_id: int
+    dir: int  # 1 for upvote, 0 for remove vote

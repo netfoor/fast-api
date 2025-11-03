@@ -34,3 +34,9 @@ class Post(SQLModel, table=True):
     )
     owner: Optional["User"] = Relationship(back_populates="posts")
 
+
+class Votes(SQLModel, table=True):
+    __tablename__ = "votes"
+    user_id: int = Field(foreign_key="users.id", primary_key=True, nullable=False, ondelete="CASCADE")
+    post_id: int = Field(foreign_key="posts.id", primary_key=True, nullable=False, ondelete="CASCADE")
+
