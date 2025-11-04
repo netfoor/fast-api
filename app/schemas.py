@@ -53,3 +53,11 @@ class TokenData(BaseModel):
 class Vote(BaseModel):
     post_id: int
     dir: int  # 1 for upvote, 0 for remove vote
+
+
+class PostOut(BaseModel):
+    Post: PostResponse
+    votes: int
+
+    class Config:
+        from_attributes = True

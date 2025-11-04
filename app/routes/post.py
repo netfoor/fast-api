@@ -3,7 +3,8 @@ from ..database import SessionDependency
 from .. import schemas, oauth2
 from typing import Annotated, Optional
 from sqlmodel import select
-from ..models import Post
+from ..models import Post, Votes
+from sqlalchemy import func
 
 router = APIRouter(
     prefix="/posts",
@@ -17,8 +18,11 @@ def get_posts(
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
     search: Optional[str] = ""
-    ) -> list[schemas.PostResponse]:
-    query = select(Post).where(Post.user_id == current_user.id)
+    ) -> list[schemas.PostOut]:
+    #query = select(Post).where(Post.user_id == current_user.id)
+
+    query = select(Post, func.count(Votes.post_id).label("votes")).join(Votes, Votes.post_id == Post.id, isouter=True).group_by(Post.id)
+    
     if search:
         query = query.where(Post.title.contains(search))
     posts = session.exec(query.offset(offset).limit(limit)).all()
@@ -38,18 +42,15 @@ def create_post(
     return db_post
 
 
-@router.get("/{id}", response_model=schemas.PostResponse)
+@router.get("/{id}", response_model=schemas.PostOut)
 def get_post(
     session: SessionDependency,
     current_user: oauth2.OauthDependency,
     id: int
     ) -> dict:
-    post = session.exec(select(Post).where(Post.id == id)).first()
+    post = session.exec(select(Post, func.count(Votes.post_id).label("votes")).join(Votes, Votes.post_id == Post.id, isouter=True).group_by(Post.id)).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-    
-    if post.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
     return post
 
 @router.delete("/{id}", response_model=schemas.PostResponse)
