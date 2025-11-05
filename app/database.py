@@ -4,9 +4,6 @@ from sqlmodel import Session, SQLModel, create_engine
 from fastapi import Depends
 from .config import settings
 
-
-
-
 # Postgres Engine
 
 postgresql_url = settings.POSTGRESQL_URL
