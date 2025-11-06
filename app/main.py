@@ -5,13 +5,13 @@ from .routes import post, user, auth, vote
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        create_db_and_tables()
-        print("🛠️ Database and tables created successfully")
-    except Exception as e:
-        print(f"Error creating database and tables: {e}")
+    # try:
+    #     create_db_and_tables()
+    #     print("🛠️ Database and tables created successfully")
+    # except Exception as e:
+    #     print(f"Error creating database and tables: {e}")
+    print("🚀 Application starting up...")
     yield
-
     print("🛠️ Application shutting down...")
 
 
