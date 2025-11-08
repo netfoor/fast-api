@@ -75,3 +75,23 @@ product.csv
 learn/
 
 *.csv
+
+# Terraform
+# Archivos de estado de Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Directorio de módulos y plugins descargados localmente
+.terraform/
+
+# Registros y archivos temporales
+*.log
+crash.log
+
+# Archivos de variables confidenciales (opcional, si contiene secretos)
+# terraform.tfvars
+
+# Archivos binarios locales (si aplica)
+# terraform.exe
+# *.exe
