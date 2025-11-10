@@ -33,3 +33,9 @@ variable "ami_id" {
   type        = string
   default     = "ami-0ecb62995f68bb549"
 }
+
+variable "allowed_ssh_cidr" {
+  description = "CIDR blocks allowed to access via SSH"
+  type        = list(string)
+  default     = []
+}
