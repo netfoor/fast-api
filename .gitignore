@@ -42,6 +42,9 @@ htmlcov/
 coverage.xml
 .coverage.*
 
+DOCUMENTATION.md
+nginx
+docker-tutorial.txt
 # Logs
 *.log
 logs/
