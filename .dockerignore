@@ -1,0 +1,43 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Infrastructure files
+infra/
+.terraform/
+
+# Learning materials
+learn/
+
+# Git
+.git/
+.gitignore
+
+# Environment files (if not needed in container)
+.env
+
+# Documentation
+*.md
+DOCUMENTATION.md
+
+# CSV data files
+*.csv
+
+# Tutorial files (but keep requirements.txt)
+docker-tutorial.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
