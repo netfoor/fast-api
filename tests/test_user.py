@@ -1,18 +1,6 @@
 from app import schemas
-from .database import client, session
-import pytest
-import jwt
+import jwt, pytest
 from app.config import settings
-
-@pytest.fixture(autouse=True)
-def test_user(client):
-    user_data = {"email": "for12@gmail.com", "password": "password123"}
-    res = client.post("/users/", json=user_data)
-    new_user = res.json()
-    new_user['password'] = user_data['password']
-    assert res.status_code == 201
-    return new_user
-
 
 def test_create_user(client):
     response = client.post(
@@ -36,3 +24,20 @@ def test_login_user(client, test_user):
     assert response.status_code == 200
     assert login_response.access_token
     assert login_response.token_type == "bearer"
+
+@pytest.mark.parametrize(
+    "email,password,status_code",
+    [
+        ("nonexistent@user.com", "password123", 404),
+        ("for12@gmail.com", "wrongpassword", 401),
+        (None, "password123", 404),
+        ("for12@gmail.com", None, 401),
+    ]
+)
+def test_login_user_incorrect(client, email, password, status_code):
+    response = client.post(
+        "/login",
+        data={"username": email, "password": password},
+    )
+    assert response.status_code == status_code
+    

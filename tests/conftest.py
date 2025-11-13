@@ -27,3 +27,13 @@ def client(session):
     yield TestClient(app)
     app.dependency_overrides.clear()
 
+
+
+@pytest.fixture(autouse=True)
+def test_user(client):
+    user_data = {"email": "for12@gmail.com", "password": "password123"}
+    res = client.post("/users/", json=user_data)
+    new_user = res.json()
+    new_user['password'] = user_data['password']
+    assert res.status_code == 201
+    return new_user
