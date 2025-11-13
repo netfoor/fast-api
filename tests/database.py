@@ -13,7 +13,7 @@ engine = create_engine(postgresql_url)
 
 client = TestClient(app)
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def session():
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
@@ -21,7 +21,7 @@ def session():
         yield session
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture()
 def client(session):
     app.dependency_overrides[get_session] = lambda: session
     yield TestClient(app)
