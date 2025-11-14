@@ -48,7 +48,7 @@ def get_post(
     current_user: oauth2.OauthDependency,
     id: int
     ) -> dict:
-    post = session.exec(select(Post, func.count(Votes.post_id).label("votes")).join(Votes, Votes.post_id == Post.id, isouter=True).group_by(Post.id)).first()
+    post = session.exec(select(Post, func.count(Votes.post_id).label("votes")).join(Votes, Votes.post_id == Post.id, isouter=True).where(Post.id == id).group_by(Post.id)).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     return post
