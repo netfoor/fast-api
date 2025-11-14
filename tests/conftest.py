@@ -2,15 +2,13 @@ from fastapi.testclient import TestClient
 from app.main import app
 from sqlmodel import Session, SQLModel, create_engine
 from app.database import get_session
-import os
-from dotenv import load_dotenv
 import pytest
 from app.oauth2 import create_access_token
 from app.models import Post
+from app.config import settings
 
-load_dotenv(dotenv_path=".env.dev")
 
-postgresql_url = os.getenv("POSTGRESQL_URL_DEV")
+postgresql_url = settings.POSTGRESQL_URL_DEV
 engine = create_engine(postgresql_url)
 
 client = TestClient(app)
