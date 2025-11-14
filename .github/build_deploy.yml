@@ -1,0 +1,48 @@
+name: Build and Deploy Code
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  jobs:
+    Testing:
+      environment: 
+        name: testing
+      env:
+        POSTGRESQL_URL_DEV: ${{ secrets.POSTGRESQL_URL_DEV }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        ALGORITHM: ${{ secrets.ALGORITHM }}
+        ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
+      
+      services:
+        postgres:
+          image: postgres:13
+          env:
+            POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+            POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          ports:
+            - 5433:5432
+          options: >-
+            --health-cmd="pg_isready -U postgres"
+            --health-interval=10s
+            --health-timeout=5s
+            --health-retries=5
+
+      runs-on: ubuntu:22.04
+      steps:
+        - uses: actions/checkout@v2
+        - name: Set up Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: '3.9'
+        - name: Install dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+        - name: Run tests
+          run: |
+            pytest tests/
