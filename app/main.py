@@ -28,7 +28,7 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {"message": "Hello World from Render using Docker Images!"}
+    return {"message": "Hello World from Render using Trigger for docker image!"}
 
 
 app.include_router(post.router)
