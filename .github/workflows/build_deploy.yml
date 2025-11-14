@@ -13,6 +13,7 @@ jobs:
     environment: 
       name: testing
     env:
+      POSTGRESQL_URL: ${{ secrets.POSTGRESQL_URL_DEV }}
       POSTGRESQL_URL_DEV: ${{ secrets.POSTGRESQL_URL_DEV }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
