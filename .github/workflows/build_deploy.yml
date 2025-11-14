@@ -84,3 +84,18 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+  
+  Deploy:
+    needs: Publish_Docker_Image
+    runs-on: ubuntu-22.04
+    
+    environment:
+      name: Production
+
+    steps:
+      - name: Trigger Render Deployment
+        run: |
+          curl -X POST "DEPLOY_HOOK_URL"
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+    
