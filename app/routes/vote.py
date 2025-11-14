@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, status, APIRouter, Response
 from .. import schemas, database, models, oauth2
 from sqlmodel import select
 
@@ -32,10 +32,10 @@ def vote(
         new_vote = models.Votes(post_id=vote.post_id, user_id=current_user.id)
         session.add(new_vote)
         session.commit()
-        return {"message": "Successfully added vote"}
+        return Response(status_code=status.HTTP_201_CREATED)
     else:
         if not found_vote:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vote does not exist")
         session.delete(found_vote)
         session.commit()
-        return {"message": "Successfully removed vote"}
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
