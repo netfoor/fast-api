@@ -99,3 +99,15 @@ crash.log
 # Archivos binarios locales (si aplica)
 # terraform.exe
 # *.exe
+
+#Archivos packer
+*.box
+*.ami
+*.qcow2
+
+# Terraform files
+*.tfvars
+*.tfvars.json
+.terraform/
+*.tfstate
+*.tfstate.backup

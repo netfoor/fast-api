@@ -125,6 +125,10 @@ build {
   }
 
   provisioner "shell" {
+    script = "scripts/install_awscli.sh"
+  }
+
+  provisioner "shell" {
     script = "scripts/setup_systemd.sh"
   }
 
