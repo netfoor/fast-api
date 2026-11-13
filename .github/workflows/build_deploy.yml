@@ -52,7 +52,7 @@ jobs:
   Publish_Docker_Image:
     needs: Testing
     runs-on: ubuntu-22.04
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
 
     environment:
       name: Production
