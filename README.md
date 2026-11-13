@@ -52,7 +52,8 @@ pytest tests/
 
 ## Deployment
 
-- `docker-compose-prod.yml` runs the image published by the CI pipeline.
+- CI runs the tests on every push and pull request. Publishing the image to Docker Hub and triggering the Render deploy run only when the workflow is started manually (`workflow_dispatch`), and need the `DOCKER_USERNAME`, `DOCKER_ACCESS_TOKEN` and `DEPLOY_HOOK_URL` secrets.
+- `docker-compose-prod.yml` runs the image published by that job.
 - `infra/packer/` builds the base image and `infra/envs/dev/` deploys it with Terraform. The Terraform code expects an AMI that Packer already built.
 
 ## Notes
